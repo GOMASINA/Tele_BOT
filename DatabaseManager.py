@@ -80,13 +80,14 @@ class DatabaseManager:
             except psycopg2.Error as e:
                 print(f"Error!: {e}")
                 return None
-    
-    #Если что ещё понадобится, то пиши. Я разобрался в теме, так что быстро насочиняю, что нужно
-    
 
-
-
-
-
-
-
+    #Если что ещё понадобится, то пиши. Я разобрался в теме, так что быстро насочиняю, что 
+    def NewbieInformation(self, newbie_id):
+        if self.connection:
+            try:
+                self.cursor.execute("""SELECT * FROM registerrequests WHERE id = %s""", (newbie_id))
+                user = self.cursor.fetchone()
+                return user
+            except psycopg2.Error as e:
+                print(f"Error!: {e}")
+                return None
