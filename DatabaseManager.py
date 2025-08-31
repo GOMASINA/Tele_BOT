@@ -33,11 +33,12 @@ class DatabaseManager:
             self.connection.close()
             print("Disconnetcted")
 
-    def AddToWaitList(self, name, role, access_level):
+    def AddToWaitList(self, name):
         if self.connection:
             try:
-                self.cursor.execute("""INSERT INTO registerrequests (name, role, access_level) VALUES (%s, %s, %s);""",
-                                    (name, role, access_level))
+                self.cursor.execute("""INSERT INTO registerlist (name)
+                                    VALUES (%s);""",
+                                    (name,))
                 self.connection.commit()
                 print('Execution complete!')
             except psycopg2.Error as e:
@@ -47,9 +48,9 @@ class DatabaseManager:
     def AddToUsersList(self, id):
         if self.connection:
             try:
-                self.cursor.execute("""INSERT INTO userslist (id, name, role, access_level)
-                                    SELECT id, name, role, access_level
-                                    FROM registerrequests
+                self.cursor.execute("""INSERT INTO userlist (id, name)
+                                    SELECT id, name
+                                    FROM registerlist
                                     WHERE id=%s;""",
                                     (id,))
                 self.connection.commit()
@@ -63,7 +64,7 @@ class DatabaseManager:
         if self.connection:
             try:
                 with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute("""SELECT * FROM userslist""")
+                    cursor.execute("""SELECT * FROM userlist;""")
                     rows = cursor.fetchall()
                     return rows
             except psycopg2.Error as e:
@@ -74,7 +75,8 @@ class DatabaseManager:
     def UserInformation(self, user_id):
         if self.connection:
             try:
-                self.cursor.execute("""SELECT * FROM userslist WHERE id = %s""", (user_id))
+                self.cursor.execute("""SELECT * FROM userlist
+                                    WHERE id = %s;""", (user_id))
                 user = self.cursor.fetchone()
                 return user
             except psycopg2.Error as e:
@@ -85,9 +87,32 @@ class DatabaseManager:
     def NewbieInformation(self, newbie_id):
         if self.connection:
             try:
-                self.cursor.execute("""SELECT * FROM registerrequests WHERE id = %s""", (newbie_id))
+                self.cursor.execute("""SELECT * FROM registerlist 
+                                    WHERE id = %s;""", (newbie_id))
                 user = self.cursor.fetchone()
                 return user
             except psycopg2.Error as e:
                 print(f"Error!: {e}")
                 return None
+
+    def ChangeUserRole(self, user_id, new_ststus):
+        if self.connection:
+            try:
+                self.cursor.execute("""UPDATE userlist
+                                       SET role = %s
+                                       WHERE id = %s;""", (new_ststus, user_id))
+                self.connection.commit()
+            except psycopg2.Error as e:
+                print(f"Error!: {e}")
+                self.connection.rollback()
+
+    def ChangeUserAccess(self, user_id, access_level):
+        if self.connection:
+            try:
+                self.cursor.execute("""UPDATE userlist
+                                       SET access_level = %s
+                                       WHERE id = %s;""", (access_level, user_id))
+                self.connection.commit()
+            except psycopg2.Error as e:
+                print(f"Error!: {e}")
+                self.connection.rollback()
